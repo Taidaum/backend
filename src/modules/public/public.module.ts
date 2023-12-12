@@ -7,11 +7,13 @@ import { PublicUserController } from './controllers/user.controller';
 
 import { AuthService } from './services/auth.service';
 import { UserService } from './services/user.service';
+import { RedisService } from '../../config/redis';
 
 const providers = [
   AuthService,
   UserService,
   MonitoringService,
+  RedisService,
 ];
 const controllers = [
   PublicUserController,

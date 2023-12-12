@@ -7,13 +7,14 @@ import { generatePasswordToken } from '../../../helpers/auth.helper';
 import { UpdateUserDto } from '../../../types/dtos/user.dto';
 import ERRORS from '../../../utils/errors';
 import { PrismaService } from '../../external/services/prisma.service';
+import { RedisService } from '../../../config/redis';
+
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly configService: ConfigService,
-  ) {}
+    ) {}
 
   async findOne(params: any): Promise<any> {
     return this.prisma.user.findUnique({
@@ -119,7 +120,7 @@ export class UserService {
     });
   }
 
-  async delete(where: Prisma.UserWhereUniqueInput, userId: number) {
+  async delete(where: Prisma.UserWhereUniqueInput) {
     return this.prisma.user.delete({
       where,
     });

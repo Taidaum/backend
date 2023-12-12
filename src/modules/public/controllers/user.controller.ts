@@ -5,6 +5,7 @@ import { API_VERSIONS } from '../../../utils/consts';
 import { PrismaService } from '../../external/services/prisma.service';
 import { UserService } from '../services/user.service';
 import { MonitoringService } from '../../monitoring/monitoring.service';
+import { RedisService } from '../../../config/redis';
 
 @Controller({
   path: 'user',
@@ -16,11 +17,14 @@ export class PublicUserController {
     private readonly monitoringService: MonitoringService,
     private readonly prismaService: PrismaService,
     private readonly userService: UserService,
+    private readonly redis: RedisService,
+
   ) { }
 
 
   @Post('')
   async createUserProfile(@Body() model: UpdateUserDto) {
+    await this.redis.del(`user`);
     const data = this.userService.createProfile(model);
 
     this.monitoringService.log('ERRO no post user');
@@ -30,6 +34,7 @@ export class PublicUserController {
 
   @Put('')
   async updateUser(@Body() model: UpdateUserDto) {
+    await this.redis.del(`user`);
     await this.userService.update(model, model.id);
 
     this.monitoringService.log('ERRO no put user');
@@ -37,14 +42,23 @@ export class PublicUserController {
 
   @Get('')
   async getList() {
+    const cachedUser = await this.redis.get(`user`);
 
-    const users = await this.prismaService.user.findMany({});
+    if (!cachedUser) {
+      const users = await this.prismaService.user.findMany({});
 
-    const countUser = await this.userService.count();
+      await this.redis.set(
+        `user`,
+        JSON.stringify(users),
+      );
+
+      return users
+    }
 
     this.monitoringService.log('ERRO no get user');
 
-    return users
+    return JSON.parse(cachedUser);
+
   }
 
   @Get(':search')
@@ -65,7 +79,8 @@ export class PublicUserController {
 
   @Delete(':id')
   async deleteUser(@Req() req: any) {
-    await this.userService.delete({ id: parseInt(req.params.id) }, parseInt(req.params.id));
+    await this.redis.del(`user`);
+    await this.userService.delete({ id: parseInt(req.params.id) });
 
     this.monitoringService.log('ERRO no delete user');
   }

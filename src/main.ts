@@ -1,18 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { join } from 'path';
 import * as http from 'http';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import * as Sentry from '@sentry/node';
 import * as Tracing from '@sentry/tracing';
-import basicAuth from 'express-basic-auth';
 import helmet from 'helmet';
 import express from 'express';
 import { Logger } from 'nestjs-pino';
 import { Server as socketio } from 'socket.io';
 import * as jwt from 'jsonwebtoken';
 import { AppModule } from './app.module';
-import { API_VERSION_HEADER, IGNORED_SENTRY_ERRORS } from './utils/consts';
+import { IGNORED_SENTRY_ERRORS } from './utils/consts';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -74,7 +73,6 @@ async function bootstrap() {
   io.use(verifyTokenMiddleware); // Usa o middleware para verificar o token
 
   io.on('connection', (socket) => {
-    console.log('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
     // A partir daqui, o token do usuário já foi verificado
 
     socket.on('disconnect', () => {
@@ -82,12 +80,10 @@ async function bootstrap() {
     });
 
     socket.on('userCreate', () => {
-    console.log('CreateCreateCreateCreateCreateCreateCreateCreateCreate')
       io.emit('userCreate');
     });
 
     socket.on('userDelete', () => {
-    console.log('DeleteDeleteDeleteDeleteDeleteDeleteDeleteDeleteDelete')
       io.emit('userDelete');
     });
   });
